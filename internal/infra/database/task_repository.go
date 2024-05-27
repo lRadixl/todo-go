@@ -23,6 +23,9 @@ type task struct {
 
 type TaskRepository interface {
 	Save(t domain.Task) (domain.Task, error)
+	Read(id uint64) (domain.Task, error)
+	Update(t domain.Task) (domain.Task, error)
+	Delete(id uint64) error
 }
 
 type taskRepository struct {
@@ -45,8 +48,34 @@ func (r taskRepository) Save(t domain.Task) (domain.Task, error) {
 	if err != nil {
 		return domain.Task{}, err
 	}
-	result := r.mapModelToDomain(tsk)
-	return result, nil
+	return r.mapModelToDomain(tsk), nil
+}
+
+func (r taskRepository) Read(id uint64) (domain.Task, error) {
+	var tsk task
+	err := r.coll.Find(db.Cond{"id": id}).One(&tsk)
+	if err != nil {
+		return domain.Task{}, err
+	}
+	return r.mapModelToDomain(tsk), nil
+}
+
+func (r taskRepository) Update(t domain.Task) (domain.Task, error) {
+	tsk := r.mapDomainToModel(t)
+	tsk.UpdatedDate = time.Now()
+	err := r.coll.Find(db.Cond{"id": t.Id}).Update(&tsk)
+	if err != nil {
+		return domain.Task{}, err
+	}
+	return r.mapModelToDomain(tsk), nil
+}
+
+func (r taskRepository) Delete(id uint64) error {
+	deletedDate := time.Now()
+	err := r.coll.Find(db.Cond{"id": id}).Update(map[string]interface{}{
+		"deleted_date": deletedDate,
+	})
+	return err
 }
 
 func (r taskRepository) mapDomainToModel(t domain.Task) task {

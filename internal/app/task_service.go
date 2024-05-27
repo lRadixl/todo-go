@@ -9,6 +9,9 @@ import (
 
 type TaskService interface {
 	Save(t domain.Task) (domain.Task, error)
+	Read(id uint64) (domain.Task, error)
+	Update(t domain.Task) (domain.Task, error)
+	Delete(id uint64) error
 }
 
 type taskService struct {
@@ -28,4 +31,31 @@ func (s taskService) Save(t domain.Task) (domain.Task, error) {
 		return domain.Task{}, err
 	}
 	return task, nil
+}
+
+func (s taskService) Read(id uint64) (domain.Task, error) {
+	task, err := s.taskRepo.Read(id)
+	if err != nil {
+		log.Printf("TaskService: %s", err)
+		return domain.Task{}, err
+	}
+	return task, nil
+}
+
+func (s taskService) Update(t domain.Task) (domain.Task, error) {
+	task, err := s.taskRepo.Update(t)
+	if err != nil {
+		log.Printf("TaskService: %s", err)
+		return domain.Task{}, err
+	}
+	return task, nil
+}
+
+func (s taskService) Delete(id uint64) error {
+	err := s.taskRepo.Delete(id)
+	if err != nil {
+		log.Printf("TaskService: %s", err)
+		return err
+	}
+	return nil
 }
